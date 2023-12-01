@@ -78,12 +78,47 @@ static void rest_get()
         .url = BASE_URL,
         .method = HTTP_METHOD_GET,
         .cert_pem = NULL,
-        .event_handler = client_event_get_handler};
+        .event_handler = client_event_get_handler
+    };
         
     esp_http_client_handle_t client = esp_http_client_init(&config_get);
     esp_http_client_perform(client);
     esp_http_client_cleanup(client);
 }
+
+esp_err_t client_event_post_handler(esp_http_client_event_handle_t evt)
+{
+    switch (evt->event_id)
+    {
+    case HTTP_EVENT_ON_DATA:
+        printf("HTTP_EVENT_ON_DATA: %.*s\n", evt->data_len, (char *)evt->data);
+        break;
+
+    default:
+        break;
+    }
+    return ESP_OK;
+}
+
+static void post_rest_function()
+{
+    esp_http_client_config_t config_post = {
+        .url = BASE_URL,
+        .method = HTTP_METHOD_POST,
+        .cert_pem = NULL,
+        .event_handler = client_event_post_handler
+    };
+        
+    esp_http_client_handle_t client = esp_http_client_init(&config_post);
+
+    char  *post_data = "{\"id\": 2,\"name\": \"Homero\",\"latitude\": 0.0,\"longitude\": 0.0,\"status\": \"working\",\"last_updated\": \"2023-10-19T00:00:00\",\"created\": \"2023-10-19T00:00:00\"}";
+    esp_http_client_set_post_field(client, post_data, strlen(post_data));
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+
+    esp_http_client_perform(client);
+    esp_http_client_cleanup(client);
+}
+
 
 void app_main(void)
 {
@@ -95,6 +130,12 @@ void app_main(void)
 
     while(1){
         sys_delay_ms(5000);
+
+        printf("POST request ...........\n\n");
+
+        post_rest_function();
+
+        printf("GET request ...........\n\n");
 
         rest_get();
     }
