@@ -150,7 +150,7 @@ void rest_put(char *path, char *data)
         
     esp_http_client_handle_t client = esp_http_client_init(&config_put);
 
-    char  *post_data = "{\"id\": 2,\"name\": \"Homero\",\"latitude\": 0.0,\"longitude\": 0.0,\"status\": \"working\",\"last_updated\": \"2023-10-19T00:00:00\",\"created\": \"2023-10-19T00:00:00\"}";
+    char  *post_data = "{\"id\": 2,\"name\": \"Homero\",\"latitude\": 0.0,\"longitude\": 0.0,\"status\": \"working\",\"last_updated\": \"2023-10-19T11:11:11\",\"created\": \"2023-10-19T00:00:00\"}";
     esp_http_client_set_post_field(client, post_data, strlen(post_data));
     esp_http_client_set_header(client, "Content-Type", "application/json");
 
@@ -217,27 +217,28 @@ void app_main(void)
         rest_get(machine_path_id);
         sys_delay_ms(SHORT_DELAY);
 
-        // printf("POST /machines ...........\n\n");
-        // rest_post(machine_path2, string_machine_id2);
-        // sys_delay_ms(SHORT_DELAY);
+        sprintf(machine_path_id, "/machines/%d", machine_id+1);
+        printf("POST /machines ...........\n\n");
+        rest_post(machine_path_id, "");
+        sys_delay_ms(SHORT_DELAY);
 
-        // printf("GET /machines ...........\n\n");
-        // rest_get("/machines/");
-        // sys_delay_ms(SHORT_DELAY);
+        printf("GET /machines ...........\n\n");
+        rest_get(machine_path);
+        sys_delay_ms(SHORT_DELAY);
 
-        // printf("PUT %s ...........\n\n", machine_path2);
-        // rest_put(machine_path2, string_machine_id2);
-        // sys_delay_ms(SHORT_DELAY);
+        printf("PUT %s ...........\n\n", machine_path_id);
+        rest_put(machine_path_id, "");
+        sys_delay_ms(SHORT_DELAY);
 
-        // printf("DELETE %s ...........\n\n", machine_path);
-        // rest_delete(machine_path);
-        // sys_delay_ms(SHORT_DELAY);
+        printf("DELETE %s ...........\n\n", machine_path);
+        rest_delete(machine_path_id);
+        sys_delay_ms(SHORT_DELAY);
 
-        // printf("GET /machines ...........\n\n");
-        // rest_get("/machines/");
-        // sys_delay_ms(SHORT_DELAY);
+        printf("GET /machines ...........\n\n");
+        rest_get("/machines/");
+        sys_delay_ms(SHORT_DELAY);
 
-        // machine_id++;
-        // sys_delay_ms(LONG_DELAY);
+        machine_id++;
+        sys_delay_ms(LONG_DELAY);
     }
 }
