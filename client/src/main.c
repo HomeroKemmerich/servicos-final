@@ -1,6 +1,7 @@
 // HTTP Client - FreeRTOS ESP IDF - GET
 
 #include <stdio.h>
+#include <time.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
@@ -12,9 +13,11 @@
 #include "esp_http_client.h"
 #include "constants/connection.h"
 
-#define BASE_URL "ip.address:port"
+#define BASE_URL "http://192.168.242.203:8000"
+#define SHORT_DELAY 1000
+#define LONG_DELAY 5000
 
-
+//#region WiFi
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     switch (event_id)
@@ -57,7 +60,9 @@ void wifi_connection()
     // 4- Wi-Fi Connect Phase
     esp_wifi_connect();
 }
+//#endregion
 
+//#region Métodos HTTP
 esp_err_t client_event_get_handler(esp_http_client_event_handle_t evt)
 {
     switch (evt->event_id)
@@ -105,7 +110,7 @@ esp_err_t client_event_post_handler(esp_http_client_event_handle_t evt)
     return ESP_OK;
 }
 
-static void post_rest_function(char* path, char* data)
+static void rest_post(char* path, char* data)
 {
     char url[100];
     sprintf(url, "%s%s", BASE_URL, path);
@@ -113,13 +118,37 @@ static void post_rest_function(char* path, char* data)
     strcat(url, path);
 
     esp_http_client_config_t config_post = {
-        .url = BASE_URL,
+        .url = url,
         .method = HTTP_METHOD_POST,
         .cert_pem = NULL,
         .event_handler = client_event_post_handler
     };
         
     esp_http_client_handle_t client = esp_http_client_init(&config_post);
+
+    char  *post_data = ("{\"id\": 2,\"name\": \"Homero\",\"latitude\": 0.0,\"longitude\": 0.0,\"status\": \"working\",\"last_updated\": \"2023-10-19T00:00:00\",\"created\": \"2023-10-19T00:00:00\"}");
+    esp_http_client_set_post_field(client, post_data, strlen(post_data));
+    esp_http_client_set_header(client, "Content-Type", "application/json");
+
+    esp_http_client_perform(client);
+    esp_http_client_cleanup(client);
+}
+
+void rest_put(char *path, char *data)
+{
+    char url[100];
+    sprintf(url, "%s%s", BASE_URL, path);
+    strcpy(url, BASE_URL);
+    strcat(url, path);
+
+    esp_http_client_config_t config_put = {
+        .url = url,
+        .method = HTTP_METHOD_PUT,
+        .cert_pem = NULL,
+        .event_handler = client_event_post_handler
+    };
+        
+    esp_http_client_handle_t client = esp_http_client_init(&config_put);
 
     char  *post_data = "{\"id\": 2,\"name\": \"Homero\",\"latitude\": 0.0,\"longitude\": 0.0,\"status\": \"working\",\"last_updated\": \"2023-10-19T00:00:00\",\"created\": \"2023-10-19T00:00:00\"}";
     esp_http_client_set_post_field(client, post_data, strlen(post_data));
@@ -129,6 +158,26 @@ static void post_rest_function(char* path, char* data)
     esp_http_client_cleanup(client);
 }
 
+void rest_delete(char *path)
+{
+    char url[100];
+    sprintf(url, "%s%s", BASE_URL, path);
+    strcpy(url, BASE_URL);
+    strcat(url, path);
+
+    esp_http_client_config_t config_delete = {
+        .url = url,
+        .method = HTTP_METHOD_DELETE,
+        .cert_pem = NULL,
+        .event_handler = client_event_post_handler
+    };
+        
+    esp_http_client_handle_t client = esp_http_client_init(&config_delete);
+
+    esp_http_client_perform(client);
+    esp_http_client_cleanup(client);
+}
+//#endregion
 
 void app_main(void)
 {
@@ -138,17 +187,57 @@ void app_main(void)
     vTaskDelay(2000 / portTICK_PERIOD_MS);
     printf("WIFI was initiated ...........\n\n");
 
-    while(1){
+    /*
+        Sequência de ações:
+            - [x] Acessa o recurso raiz
+            - [x] Cria um novo recurso
+            - [x] Acessa o recurso criado
+            - [x] Cria um novo recurso
+            - [x] Lista todos os recursos
+            - [x] Altera o segundo recurso
+            - [x] Exclui o primeiro recurso
+            - [x] Lista todos os recursos
+    */
+    int machine_id = 0;
+    while(1){        
+        char machine_path[100] = "/machines/", machine_path_id[100];
+        sprintf(machine_path_id, "/machines/%d", machine_id);
+        
+
+
         printf("GET /         ...........\n\n");
         rest_get("/");
-        sys_delay_ms(2000);
+        sys_delay_ms(SHORT_DELAY);
         
         printf("POST /machines ...........\n\n");
-        post_rest_function("/machines/", "");
-        sys_delay_ms(2000);
+        rest_post(machine_path, "");
+        sys_delay_ms(SHORT_DELAY);
 
-        printf("GET /machines ...........\n\n");
-        rest_get("/machines/");
-        sys_delay_ms(5000);
+        printf("GET %s ...........\n\n", machine_path);
+        rest_get(machine_path_id);
+        sys_delay_ms(SHORT_DELAY);
+
+        // printf("POST /machines ...........\n\n");
+        // rest_post(machine_path2, string_machine_id2);
+        // sys_delay_ms(SHORT_DELAY);
+
+        // printf("GET /machines ...........\n\n");
+        // rest_get("/machines/");
+        // sys_delay_ms(SHORT_DELAY);
+
+        // printf("PUT %s ...........\n\n", machine_path2);
+        // rest_put(machine_path2, string_machine_id2);
+        // sys_delay_ms(SHORT_DELAY);
+
+        // printf("DELETE %s ...........\n\n", machine_path);
+        // rest_delete(machine_path);
+        // sys_delay_ms(SHORT_DELAY);
+
+        // printf("GET /machines ...........\n\n");
+        // rest_get("/machines/");
+        // sys_delay_ms(SHORT_DELAY);
+
+        // machine_id++;
+        // sys_delay_ms(LONG_DELAY);
     }
 }
