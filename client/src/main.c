@@ -72,10 +72,15 @@ esp_err_t client_event_get_handler(esp_http_client_event_handle_t evt)
     return ESP_OK;
 }
 
-static void rest_get()
+static void rest_get(char* path)
 {
+    char url[100];
+    sprintf(url, "%s%s", BASE_URL, path);
+    strcpy(url, BASE_URL);
+    strcat(url, path);
+
     esp_http_client_config_t config_get = {
-        .url = BASE_URL,
+        .url = url,
         .method = HTTP_METHOD_GET,
         .cert_pem = NULL,
         .event_handler = client_event_get_handler
@@ -100,8 +105,13 @@ esp_err_t client_event_post_handler(esp_http_client_event_handle_t evt)
     return ESP_OK;
 }
 
-static void post_rest_function()
+static void post_rest_function(char* path, char* data)
 {
+    char url[100];
+    sprintf(url, "%s%s", BASE_URL, path);
+    strcpy(url, BASE_URL);
+    strcat(url, path);
+
     esp_http_client_config_t config_post = {
         .url = BASE_URL,
         .method = HTTP_METHOD_POST,
@@ -129,14 +139,16 @@ void app_main(void)
     printf("WIFI was initiated ...........\n\n");
 
     while(1){
+        printf("GET /         ...........\n\n");
+        rest_get("/");
+        sys_delay_ms(2000);
+        
+        printf("POST /machines ...........\n\n");
+        post_rest_function("/machines/", "");
+        sys_delay_ms(2000);
+
+        printf("GET /machines ...........\n\n");
+        rest_get("/machines/");
         sys_delay_ms(5000);
-
-        printf("POST request ...........\n\n");
-
-        post_rest_function();
-
-        printf("GET request ...........\n\n");
-
-        rest_get();
     }
 }
