@@ -4,7 +4,7 @@
 
 ### Servidor 
 
-Foi utilizado o mesmo servidor do trabalho de web services
+Foi utilizado o mesmo servidor do [trabalho de web services](https://github.com/HomeroKemmerich/servicos)
 
 ### Cliente
 
@@ -15,7 +15,7 @@ Foi utilizado o mesmo servidor do trabalho de web services
     - Acessa o recurso raiz
     - Cria um recurso
     - Lê todos os recursos
-    
+
 
 ## Utilização
 
