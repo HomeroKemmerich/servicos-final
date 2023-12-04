@@ -2,6 +2,8 @@
 
 #include <stdio.h>
 #include <time.h>
+#include<sys/time.h>
+#include <stdlib.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/timers.h"
@@ -12,12 +14,13 @@
 #include "esp_netif.h"
 #include "esp_http_client.h"
 #include "constants/connection.h"
+#include "lwip/apps/sntp.h"
 
-#define BASE_URL "http://192.168.242.203:8000"
+#define BASE_URL "http://192.168.1.10:8000"
 #define SHORT_DELAY 1000
 #define LONG_DELAY 5000
 
-//#region WiFi
+// #region WiFi
 static void wifi_event_handler(void *event_handler_arg, esp_event_base_t event_base, int32_t event_id, void *event_data)
 {
     switch (event_id)
@@ -60,9 +63,9 @@ void wifi_connection()
     // 4- Wi-Fi Connect Phase
     esp_wifi_connect();
 }
-//#endregion
+// #endregion
 
-//#region Métodos HTTP
+// #region Métodos HTTP
 esp_err_t client_event_get_handler(esp_http_client_event_handle_t evt)
 {
     switch (evt->event_id)
@@ -77,7 +80,7 @@ esp_err_t client_event_get_handler(esp_http_client_event_handle_t evt)
     return ESP_OK;
 }
 
-static void rest_get(char* path)
+static void rest_get(char *path)
 {
     char url[100];
     sprintf(url, "%s%s", BASE_URL, path);
@@ -88,9 +91,8 @@ static void rest_get(char* path)
         .url = url,
         .method = HTTP_METHOD_GET,
         .cert_pem = NULL,
-        .event_handler = client_event_get_handler
-    };
-        
+        .event_handler = client_event_get_handler};
+
     esp_http_client_handle_t client = esp_http_client_init(&config_get);
     esp_http_client_perform(client);
     esp_http_client_cleanup(client);
@@ -109,10 +111,47 @@ esp_err_t client_event_post_handler(esp_http_client_event_handle_t evt)
     }
     return ESP_OK;
 }
+esp_err_t client_event_delete_handler(esp_http_client_event_handle_t evt)
+{
+    switch (evt->event_id)
+    {
+    case HTTP_EVENT_ON_DATA:
+        printf("HTTP_EVENT_ON_DATA: %.*s\n", evt->data_len, (char *)evt->data);
+        break;
 
-static void rest_post(char* path, char* data)
+    default:
+        break;
+    }
+    return ESP_OK;
+}
+esp_err_t client_event_put_handler(esp_http_client_event_handle_t evt)
+{
+    switch (evt->event_id)
+    {
+    case HTTP_EVENT_ON_DATA:
+        printf("HTTP_EVENT_ON_DATA: %.*s\n", evt->data_len, (char *)evt->data);
+        break;
+
+    default:
+        break;
+    }
+    return ESP_OK;
+}
+char status[4][10] = {"working", "stop", "moving", "offline"};
+char names[4][10] = {"Homero", "Gabriel", "Bruno", "Trator"};
+static void rest_post(char *path, char *data)
 {
     char url[100];
+    time_t addTime;
+    time(&addTime);
+    struct tm timeDate;
+    gmtime_r(&addTime, &timeDate);
+    char timeISO[20];
+    strftime(timeISO, sizeof(timeISO), "%Y-%m-%dT%H:%M:%S" , &timeDate);
+    char currentStatus[10];
+    strcpy(currentStatus, status[(rand() % 4)]);
+    char name[10];
+    strcpy(name, names[(rand() % 4)]);
     sprintf(url, "%s%s", BASE_URL, path);
     strcpy(url, BASE_URL);
     strcat(url, path);
@@ -121,22 +160,31 @@ static void rest_post(char* path, char* data)
         .url = url,
         .method = HTTP_METHOD_POST,
         .cert_pem = NULL,
-        .event_handler = client_event_post_handler
-    };
-        
+        .event_handler = client_event_post_handler};
+
     esp_http_client_handle_t client = esp_http_client_init(&config_post);
 
-    char  *post_data = ("{\"id\": 2,\"name\": \"Homero\",\"latitude\": 0.0,\"longitude\": 0.0,\"status\": \"working\",\"last_updated\": \"2023-10-19T00:00:00\",\"created\": \"2023-10-19T00:00:00\"}");
+    char post_data[200];
+    sprintf(post_data, "{\"id\": %d,\"name\": \"%s\",\"latitude\": 0.0,\"longitude\": 0.0,\"status\": \"%s\",\"last_updated\": \"%s\",\"created\": \"%s\"}", (int)(random() % 10), name, currentStatus, timeISO, timeISO);
     esp_http_client_set_post_field(client, post_data, strlen(post_data));
     esp_http_client_set_header(client, "Content-Type", "application/json");
 
     esp_http_client_perform(client);
     esp_http_client_cleanup(client);
 }
-
 void rest_put(char *path, char *data)
 {
     char url[100];
+     time_t addTime;
+    time(&addTime);
+    struct tm timeDate;
+    gmtime_r(&addTime, &timeDate);
+    char timeISO[20];
+    strftime(timeISO, sizeof(timeISO), "%Y-%m-%dT%H:%M:%S" , &timeDate);
+    char currentStatus[10];
+    strcpy(currentStatus, status[(rand() % 4)]);
+    char name[10];
+    strcpy(name, names[(rand() % 4)]);
     sprintf(url, "%s%s", BASE_URL, path);
     strcpy(url, BASE_URL);
     strcat(url, path);
@@ -145,12 +193,12 @@ void rest_put(char *path, char *data)
         .url = url,
         .method = HTTP_METHOD_PUT,
         .cert_pem = NULL,
-        .event_handler = client_event_post_handler
-    };
-        
+        .event_handler = client_event_put_handler};
+
     esp_http_client_handle_t client = esp_http_client_init(&config_put);
 
-    char  *post_data = "{\"id\": 2,\"name\": \"Homero\",\"latitude\": 0.0,\"longitude\": 0.0,\"status\": \"working\",\"last_updated\": \"2023-10-19T11:11:11\",\"created\": \"2023-10-19T00:00:00\"}";
+    char post_data[200];
+    sprintf(post_data, "{\"id\": %d,\"name\": \"%s\",\"latitude\": 0.0,\"longitude\": 0.0,\"status\": \"%s\",\"last_updated\": \"%s\", \"created\":null}", (int)(random() % 10), name, currentStatus, timeISO);
     esp_http_client_set_post_field(client, post_data, strlen(post_data));
     esp_http_client_set_header(client, "Content-Type", "application/json");
 
@@ -169,21 +217,36 @@ void rest_delete(char *path)
         .url = url,
         .method = HTTP_METHOD_DELETE,
         .cert_pem = NULL,
-        .event_handler = client_event_post_handler
-    };
-        
+        .event_handler = client_event_delete_handler};
+
     esp_http_client_handle_t client = esp_http_client_init(&config_delete);
 
     esp_http_client_perform(client);
     esp_http_client_cleanup(client);
 }
-//#endregion
+// #endregion
+void obtain_time(void) {
+    sntp_setoperatingmode(SNTP_OPMODE_POLL);
+    sntp_setservername(0, "pool.ntp.org");
+    sntp_init();
 
+    // Wait for synchronization (maximum 10 seconds)
+    time_t now = 0;
+    struct tm timeinfo = { 0 };
+    int retry = 0;
+    const int retry_count = 10;
+    while (timeinfo.tm_year < (2021 - 1900) && ++retry < retry_count) {
+        vTaskDelay(1000 / portTICK_PERIOD_MS);
+        time(&now);
+        localtime_r(&now, &timeinfo);
+    }
+}
 void app_main(void)
 {
     nvs_flash_init();
     wifi_connection();
-
+    srand(time(NULL));
+    obtain_time();
     vTaskDelay(2000 / portTICK_PERIOD_MS);
     printf("WIFI was initiated ...........\n\n");
 
@@ -198,17 +261,15 @@ void app_main(void)
             - [x] Exclui o primeiro recurso
             - [x] Lista todos os recursos
     */
-    int machine_id = 0;
-    while(1){        
+    while (1)
+    {
         char machine_path[100] = "/machines/", machine_path_id[100];
-        sprintf(machine_path_id, "/machines/%d", machine_id);
-        
-
+        sprintf(machine_path_id, "/machines/%d", (int)(random() % 10));
 
         printf("GET /         ...........\n\n");
         rest_get("/");
         sys_delay_ms(SHORT_DELAY);
-        
+
         printf("POST /machines ...........\n\n");
         rest_post(machine_path, "");
         sys_delay_ms(SHORT_DELAY);
@@ -217,7 +278,7 @@ void app_main(void)
         rest_get(machine_path_id);
         sys_delay_ms(SHORT_DELAY);
 
-        sprintf(machine_path_id, "/machines/%d", machine_id+1);
+        sprintf(machine_path_id, "/machines/%d", (int)(random() % 10));
         printf("POST /machines ...........\n\n");
         rest_post(machine_path_id, "");
         sys_delay_ms(SHORT_DELAY);
@@ -238,7 +299,6 @@ void app_main(void)
         rest_get("/machines/");
         sys_delay_ms(SHORT_DELAY);
 
-        machine_id++;
         sys_delay_ms(LONG_DELAY);
     }
 }

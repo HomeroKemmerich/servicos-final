@@ -3,8 +3,8 @@
 '''
 
 from fastapi import FastAPI
-from .models.machine import Machine
-from .data.machines import machine_list
+from models.machine import Machine
+from data.machines import machine_list
 
 
 app = FastAPI()
@@ -23,7 +23,12 @@ async def read_machine(machine_id: int):
 
 @app.post("/machines/")
 async def create_machine(machine: Machine):
-    machine_list.append(machine)
+    hasSameId = False
+    for m in machine_list:
+        if(m.id == machine.id):
+            hasSameId = True
+    if(not(hasSameId)):
+        machine_list.append(machine)
     return machine
 
 @app.put("/machines/{machine_id}")
@@ -34,8 +39,10 @@ async def update_machine(machine_id: int, machine: Machine):
             m.status = machine.status
             m.latitude = machine.latitude
             m.longitude = machine.longitude
-            m.last_updated = machine.last_updated
-            m.created = machine.created
+            m.last_updated = machine.last_updated or m.last_updated
+            m.created = machine.created or m.created
+            print(machine_id)
+            print(machine_list)
     return (machine for machine in machine_list if machine.id == machine_id)
 
 @app.patch("/machines/{machine_id}")
