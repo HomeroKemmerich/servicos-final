@@ -10,6 +10,19 @@
     <script>hljs.initHighlightingOnLoad();</script>
 </head>
 
+<style>
+    .diff{
+        flex-direction: row;
+        display: flex;
+        justify-content: space-evenly;
+    }
+    .code-block{
+        width: calc(50% - 5px);
+        float: left;
+        margin-right: 10px;
+    }
+</style>
+
 <body>
     <h1>Web Services</h1>
     <p>Principais diferenças entre os frameworks Arduino e ESP-IDF para ESP32 na utilização de serviços web</p>
@@ -31,26 +44,26 @@
             Estrutura do programa: No ESP-IDF, o programa é estruturado de forma mais modular, com várias funções sendo
             definidas e chamadas a partir da função <code>app_main()</code>. Isso permite uma organização mais flexível
             do código e facilita a reutilização de partes específicas do programa. No Arduino, o programa é estruturado
-            em duas funções principais: <code>app_main()</code> e <code>app_main()</code>, onde o código de
-            inicialização é colocado no <code>app_main()</code> e o código principal é colocado no
-            <code>app_main()</code>.
+            em duas funções principais: <code>setup()</code> e <code>loop()</code>, onde o código de
+            inicialização é colocado no <code>setup()</code> e o código principal é colocado no
+            <code>loop()</code>.
         </li>
         <li>
             Execução do programa: No ESP-IDF, o <code>app_main()</code> é executado apenas uma vez, quando o programa é
             iniciado. Após a execução do <code>app_main()</code>, o programa é encerrado. No Arduino, o
-            <code>app_main()</code> é executado uma vez, no início do programa, e o <code>app_main()</code> é executado
+            <code>setup()</code> é executado uma vez, no início do programa, e o <code>loop()</code> é executado
             continuamente em um loop infinito.
         </li>
         <li>
             Manipulação de eventos: No ESP-IDF, é comum usar a biblioteca de eventos do FreeRTOS para lidar com eventos
             assíncronos, como interrupções, temporizadores e comunicação com periféricos. Esses eventos são tratados em
             funções separadas, que são chamadas a partir do <code>app_main()</code>. No Arduino, a manipulação de
-            eventos é geralmente feita dentro do <code>app_main()</code>, onde o código é executado repetidamente.
+            eventos é geralmente feita dentro do <code>loop()</code>, onde o código é executado repetidamente.
         </li>
         <li>
             Acesso a recursos do sistema: No ESP-IDF, é possível acessar recursos do sistema, como GPIOs, UARTs, SPIs,
             etc., diretamente no <code>app_main()</code> ou em funções chamadas a partir dele. No Arduino, o acesso a
-            esses recursos é feito principalmente dentro do <code>app_main()</code> e <code>app_main()</code>, usando
+            esses recursos é feito principalmente dentro do <code>setup()</code> e <code>loop()</code>, usando
             funções e bibliotecas específicas do Arduino.
         </li>
     </ol>
@@ -63,8 +76,8 @@
         voltado para projetos de prototipagem rápida.
     </p>
 
-    <div>
-        <div style="width: calc(50% - 5px); float: left; margin-right: 10px;">
+    <div class="diff">
+        <div class="code-block">
             <h4>main.c</h4>
             <pre><code class="c">
             void app_main(void){
@@ -73,7 +86,7 @@
           </code></pre>
         </div>
     
-        <div style="width: calc(50% - 5px); float: left;">
+        <div class="code-block">
             <h4>main.cpp</h4>
             <pre><code class="cpp">
             void setup(){
@@ -90,8 +103,8 @@
     <h3>Conexão WiFi</h3>
     <p>O framework Arduino possui uma biblioteca própria para a utilização de serviços web, enquanto o framework ESP-IDF utiliza a biblioteca esp_wifi.</p>
 
-    <div>
-        <div style="width: calc(50% - 5px); float: left; margin-right: 10px;">
+    <div class="diff">
+        <div class="code-block">
             <h4>main.c</h4>
             <pre><code class="c">
                 #include <esp_wifi.h>
@@ -127,7 +140,7 @@
           </code></pre>
         </div>
     
-        <div style="width: calc(50% - 5px); float: left;">
+        <div class="code-block">
             <h4>main.cpp</h4>
             <pre><code class="cpp">
                 #include <WiFi.h>
@@ -145,8 +158,8 @@
 
     <h3>Conexão HTTP</h3>
     <p>Para a conexão HTTP, o framework Arduino utiliza a biblioteca HTTPClient, enquanto o framework ESP-IDF utiliza a biblioteca esp_http_client.</p>
-    <div>
-        <div style="width: calc(50% - 5px); float: left; margin-right: 10px;">
+    <div class="diff">
+        <div class="code-block">
             <h4>main.c</h4>
             <pre><code class="c">
                 #include "esp_http_client.h"
@@ -171,7 +184,7 @@
           </code></pre>
         </div>
     
-        <div style="width: calc(50% - 5px); float: left;">
+        <div class="code-block">
             <h4>main.cpp</h4>
             <pre><code class="cpp">
                 #include <HTTPClient.h>
