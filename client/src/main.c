@@ -16,7 +16,6 @@
 #include "constants/connection.h"
 #include "lwip/apps/sntp.h"
 
-#define BASE_URL "http://192.168.1.10:8000"
 #define SHORT_DELAY 1000
 #define LONG_DELAY 5000
 
@@ -55,8 +54,10 @@ void wifi_connection()
     esp_event_handler_register(IP_EVENT, IP_EVENT_STA_GOT_IP, wifi_event_handler, NULL);
     wifi_config_t wifi_configuration = {
         .sta = {
-            .ssid = SSID,
-            .password = PASS}};
+            .ssid = WIFI_SSID,
+            .password = WIFI_PASS
+        }
+    };
     esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_configuration);
     // 3 - Wi-Fi Start Phase
     esp_wifi_start();
