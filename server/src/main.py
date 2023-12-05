@@ -3,8 +3,8 @@
 '''
 
 from fastapi import FastAPI
-from models.machine import Machine
-from data.machines import machine_list
+from .models.machine import Machine
+from .data.machines import machine_list
 
 
 app = FastAPI()
